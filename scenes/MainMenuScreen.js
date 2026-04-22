@@ -10,25 +10,26 @@ export class MainMenuScreen extends Phaser.Scene{
     create() {
         this.background = this.add.tileSprite(640, 360, 1920, 1080, 'background');
 
-        this.add.text(640, 200, 'Galaxy Battles', { 
-            fontSize: '16px', fill: '#FFF' 
+        this.add.text(640, 100, 'Galaxy Battles', { 
+            fontSize: '32px', fill: '#FFF' 
             }).setOrigin(0.5);
 
-    const startBtn = this.add.text(640,200, 'Level Select', {
+    const levelBtn = this.add.text(640,250, 'Level Select', {
         fontSize: '28px',
         backgroundColor: '#000',
         padding: 10
     }).setOrigin(0.5).setInteractive();
 
-    const optionsBtn = this.add.text(640, 400, 'Options', {
+    const optionsBtn = this.add.text(640, 350, 'Options', {
         fontSize: '28px',
         backgroundColor: '#000',
         padding: 10 
         }).setOrigin(0.5).setInteractive();
 
-    startBtn.on('pointerdown', () => {
-        this.scene.start('Game');
+    levelBtn.on('pointerdown', () => {
+        this.scene.start('LevelSelect');
     })
+    
 
     optionsBtn.on('pointerdown', () => {
         this.scene.start('Options');

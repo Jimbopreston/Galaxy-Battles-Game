@@ -1,3 +1,5 @@
+import HexTile from './HexTile.js';
+
 export default class HexGrid {
   constructor(scene, config) {
     this.scene = scene;
@@ -7,27 +9,37 @@ export default class HexGrid {
     this.hexWidth = config.hexWidth;
     this.hexHeight = config.hexHeight;
     this.texture = config.texture;
-
-    this.offsetX = config.offsetX || 0;
-    this.offsetY = config.offsetY || 0;
-
+    this.offsetX = this.scene.scale.width / 4;
+    this.offsetY = 100;
     this.grid = [];
   }
 
   generate() {
-    for (let col = 0; col < this.cols; col++) {
-      this.grid[col] = [];
+  const w = this.hexWidth;
+  const h = this.hexHeight;
 
-      for (let row = 0; row < this.rows; row++) {
+  const xOffset = w * 0.75;   // correct horizontal spacing
+  const yOffset = h;
 
-        const x = col * this.hexWidth * 0.75 + this.offsetX;
-        const y = row * this.hexHeight + (col % 2) * (this.hexHeight / 2) + this.offsetY;
+  for (let col = 0; col < this.cols; col++) {
+    this.grid[col] = [];
 
-        const tile = new HexTile(this.scene, x, y, this.texture, col, row);
-        this.grid[col][row] = tile;
+    for (let row = 0; row < this.rows; row++) {
 
-        this.grid[col][row] = tile;
-      }
+      const x = col * xOffset + this.offsetX;
+      const y = row * yOffset + (col % 2) * (h / 2) + this.offsetY;
+
+      const tile = new HexTile(
+        this.scene,
+        x,
+        y,
+        this.texture,
+        col,
+        row
+      );
+
+      this.grid[col][row] = tile;
     }
   }
+}
 }

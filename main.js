@@ -1,10 +1,12 @@
 import { StartScreen } from './scenes/StartScreen.js';
 import { MainMenuScreen } from './scenes/MainMenuScreen.js';
+import { LevelSelect } from './scenes/LevelSelect.js';
+import { Level } from './scenes/Level.js';
 
 const config = {
     type: Phaser.AUTO,
-    title: 'Overlord Rising',
-    description: '',
+    title: 'Galaxy Battles',
+    description: 'This is galaxy battles! A game to teach children maths',
     parent: 'game-container',
     width: 1280,
     height: 720,
@@ -12,7 +14,9 @@ const config = {
     pixelArt: false,
     scene: [
         StartScreen,
-        MainMenuScreen
+        MainMenuScreen,
+        LevelSelect,
+        Level
     ],
     scale: {
         mode: Phaser.Scale.FIT,

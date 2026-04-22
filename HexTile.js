@@ -1,32 +1,30 @@
 export default class HexTile {
   constructor(scene, x, y, texture, col, row) {
     this.scene = scene;
-
     this.col = col;
     this.row = row;
 
     this.isVisible = true;
     this.isDiscovered = false;
-
     this.occupant = null;
 
     this.sprite = scene.add.image(x, y, texture);
 
-    this.setInteractive({ useHandCursor: true });
+    // make interactive ON THE SPRITE
+    this.sprite.setInteractive({ useHandCursor: true });
 
-    this.on('pointerover', () => {
-        this.setTint(0xaaaaaa); 
-    }); 
-
-    this.on('pointerout', () => {
-        this.clearTint();
+    this.sprite.on('pointerover', () => {
+      this.sprite.setTint(0xaaaaaa);
     });
 
-    this.on('pointerdown', () => {
-        console.log(`Clicked tile at ${this.q}, ${this.r}`);
-        this.setTint(0x00ff00);
+    this.sprite.on('pointerout', () => {
+      this.sprite.clearTint();
     });
 
+    this.sprite.on('pointerdown', () => {
+      console.log(`Clicked tile at ${this.col}, ${this.row}`);
+      this.sprite.setTint(0x00ff00);
+    });
   }
 
   reveal() {
