@@ -1,5 +1,6 @@
 export default class HexTile {
   constructor(scene, x, y, texture, col, row) {
+
     this.scene = scene;
     this.col = col;
     this.row = row;
@@ -8,11 +9,14 @@ export default class HexTile {
     this.isDiscovered = false;
     this.occupant = null;
 
+    // 🧠 CREATE SPRITE
     this.sprite = scene.add.image(x, y, texture);
+    this.sprite.setDisplaySize(96, 84);
 
-    // make interactive ON THE SPRITE
+    // 🧠 MAKE INTERACTIVE (ONLY ON SPRITE)
     this.sprite.setInteractive({ useHandCursor: true });
 
+    // hover effects
     this.sprite.on('pointerover', () => {
       this.sprite.setTint(0xaaaaaa);
     });
@@ -22,26 +26,56 @@ export default class HexTile {
     });
 
     this.sprite.on('pointerdown', () => {
-      console.log(`Clicked tile at ${this.col}, ${this.row}`);
-      this.sprite.setTint(0x00ff00);
+
+      const scene = this.scene;
+
+      if (scene.currentTurn !== 'player') return;
+
+      // select unit
+      if (this.occupant && this.occupant.type === 'player') {
+        scene.selectedUnit = this.occupant;
+        this.occupant.select();
+        return;
+      }
+
+      // move unit
+      const unit = scene.selectedUnit;
+
+      if (!unit) return;
+
+      if (!unit.reachableTiles) return;
+
+      if (unit.reachableTiles.includes(this)) {
+
+        unit.clearSelection();
+        unit.moveTo(this);
+
+        scene.endTurn();
+      }
     });
   }
 
   reveal() {
-    this.isVisible = true;
     this.sprite.setAlpha(1);
   }
 
   hide() {
-    this.isVisible = false;
     this.sprite.setAlpha(0.3);
   }
 
-  setOccupant(ship) {
-    this.occupant = ship;
+  setOccupant(unit) {
+    this.occupant = unit;
   }
 
   removeOccupant() {
     this.occupant = null;
+  }
+
+  highlight() {
+    this.sprite.setTint(0x00ff00);
+  }
+
+  clearHighlight() {
+    this.sprite.clearTint();
   }
 }
