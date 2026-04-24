@@ -21,6 +21,8 @@ export class Level extends Phaser.Scene {
     this.load.image('background', '/assets/images/Background.png');
     this.load.image('hex', 'assets/tiles/SpaceHexTile.png');
     this.load.image('ship', 'assets/units/ship.png');
+    this.load.image('playerShip', 'assets/images/playerShip.png');
+    this.load.image('enemyShip', 'assets/images/enemyship.png');
   }
 
   create(){
@@ -45,7 +47,7 @@ export class Level extends Phaser.Scene {
   const enemyTile = this.hexGrid.grid[5][5];
 
   // ✅ CREATE PLAYER ONLY ONCE
-  this.player = new PlayerUnit(this, playerTile, 'ship');
+  this.player = new PlayerUnit(this, playerTile, 'playerShip');
 
   this.enemies = [];
   this.enemies.push(new EnemyUnit(this, enemyTile, 'enemyShip'));
@@ -58,20 +60,28 @@ export class Level extends Phaser.Scene {
 
     tile.sprite.setInteractive();
 
-    tile.sprite.on('pointerdown', () => {
+tile.sprite.on('pointerdown', () => {
 
-      const unit = this.selectedUnit || this.player;
+  // only allow movement during player's turn
+  if (this.currentTurn !== 'player') return;
 
-      if (!unit.reachableTiles) return;
+  // player must click/select their ship first
+  const unit = this.selectedUnit;
 
-      if (unit.reachableTiles.includes(tile)) {
+  if (!unit) return;
+  if (!unit.reachableTiles) return;
 
-        unit.clearSelection();
-        unit.moveTo(tile);
+  // only move if tile is highlighted and empty
+  if (unit.reachableTiles.includes(tile) && !tile.occupant) {
 
-        this.endPlayerTurn(); // 👈 NEW
-      }
-    });
+    unit.clearSelection();
+    unit.moveTo(tile);
+
+    this.selectedUnit = null;
+
+    this.endPlayerTurn();
+  }
+});
   });
 
   // =========================
@@ -80,8 +90,11 @@ export class Level extends Phaser.Scene {
 
   this.player.sprite.setInteractive();
 
-  this.player.sprite.on('pointerdown', () => {
-    this.player.select();
-  });
+this.player.sprite.on('pointerdown', () => {
+  if (this.currentTurn !== 'player') return;
+
+  this.selectedUnit = this.player;
+  this.player.select();
+});
 }
 }

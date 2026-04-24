@@ -7,9 +7,6 @@ export default class PlayerUnit extends Unit {
         this.health = 100;
         this.moveRange = 3;
         this.reachableTiles = [];
-        this.sprite = scene.add.image(tile.x, tile.y, texture);
-        this.currentTile = tile;
-        tile.setOccupant(this);
     }
 
     takeTurn() {

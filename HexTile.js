@@ -5,6 +5,9 @@ export default class HexTile {
     this.col = col;
     this.row = row;
 
+    this.x = x; 
+    this.y = y; 
+
     this.isVisible = true;
     this.isDiscovered = false;
     this.occupant = null;
