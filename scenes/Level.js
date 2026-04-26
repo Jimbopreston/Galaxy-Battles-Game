@@ -47,7 +47,6 @@ export class Level extends Phaser.Scene {
     this.combatUI = null;
     this.answerInput = null;
     this.submitButton = null;
-
     this.selectedUnit = null;
     this.currentTurn = 'player';
     this.playerPowerUp = null;
@@ -89,34 +88,34 @@ export class Level extends Phaser.Scene {
     const enemyTile = this.hexGrid.grid[5][5];
 
     this.player = new PlayerUnit(this, playerTile, 'playerShip');
+    this.createEnergyUI();
 
     this.enemies = [];
     this.enemies.push(new EnemyUnit(this, enemyTile, 'enemyShip'));
 
     this.enemies.forEach(enemy => {
-  enemy.sprite.setInteractive();
+      enemy.sprite.setInteractive();
 
-  enemy.sprite.on('pointerdown', () => {
-    if (this.currentTurn !== 'player') return;
-    if (!this.selectedUnit) return;
-    if (!enemy.isAlive) return;
+      enemy.sprite.on('pointerdown', () => {
+        if (this.currentTurn !== 'player') return;
+        if (!this.selectedUnit) return;
+        if (!enemy.isAlive) return;
 
-    const distance = this.hexGrid.hexDistance(
-      this.selectedUnit.currentTile,
-      enemy.currentTile
-    );
+        const distance = this.hexGrid.hexDistance(
+          this.selectedUnit.currentTile,
+          enemy.currentTile
+        );
 
-    if (distance <= 3) {
-      this.selectedUnit.clearSelection();
-      this.handleCombat(enemy);
-      this.selectedUnit = null;
-    } else {
-      console.log("Enemy too far away");
-    }
-  });
-});
+        if (distance <= 3) {
+          this.selectedUnit.clearSelection();
+          this.handleCombat(enemy);
+          this.selectedUnit = null;
+        } else {
+          console.log("Enemy too far away");
+        }
+      });
+    });
 
-    // 🧍 PLAYER SELECT
     this.player.sprite.setInteractive();
 
     this.player.sprite.on('pointerdown', () => {
@@ -127,7 +126,6 @@ export class Level extends Phaser.Scene {
       this.player.select();
     });
 
-    // 🟩 TILE CLICK
     this.hexGrid.tiles.forEach(tile => {
 
       tile.sprite.setInteractive();
@@ -140,7 +138,6 @@ export class Level extends Phaser.Scene {
         const unit = this.selectedUnit;
         if (!unit || !unit.reachableTiles) return;
 
-        // 🪐 PLANET POWER-UP
         if (
           tile.planet &&
           unit.reachableTiles.includes(tile)
@@ -149,9 +146,8 @@ export class Level extends Phaser.Scene {
           this.handlePlanetChallenge();
           this.selectedUnit = null;
           return;
-        } 
+        }
 
-        // ⚔️ ATTACK
         if (
           tile.occupant &&
           tile.occupant.type === 'enemy' &&
@@ -163,12 +159,11 @@ export class Level extends Phaser.Scene {
           return;
         }
 
-        // 🚶 MOVE
         if (unit.reachableTiles.includes(tile) && !tile.occupant && !tile.blocked) {
-        unit.clearSelection();
-        unit.moveTo(tile);
-        this.selectedUnit = null;
-        this.endPlayerTurn();
+          unit.clearSelection();
+          unit.moveTo(tile);
+          this.selectedUnit = null;
+          this.endPlayerTurn();
         }
       });
     });
@@ -178,13 +173,13 @@ export class Level extends Phaser.Scene {
     if (!this.player.isAlive || !enemy.isAlive) return;
 
     const question = this.mathSystem.generateQuestion();
+    const energyStats = this.player.getEnergyStats();
 
     this.showCombatUI(question, (playerAnswer) => {
-
       const result = this.mathSystem.checkAnswer(playerAnswer);
 
       if (result.correct) {
-        let damage = 10 * result.damageMultiplier;
+        let damage = (10 * result.damageMultiplier) * energyStats.attackMultiplier;
 
         if (this.playerPowerUp === 'Attack Boost') {
           damage += 10;
@@ -193,7 +188,9 @@ export class Level extends Phaser.Scene {
 
         enemy.takeDamage(damage);
       } else {
-        this.player.takeDamage(5);
+        const baseDamage = 10;
+        const reducedDamage = Math.max(1, baseDamage - (baseDamage * energyStats.damageReduction));
+        this.player.takeDamage(reducedDamage);
       }
 
       if (!enemy.isAlive) return this.levelComplete();
@@ -204,170 +201,204 @@ export class Level extends Phaser.Scene {
   }
 
   handlePlanetChallenge() {
-  const question = this.mathSystem.generateQuestion();
+    const question = this.mathSystem.generateQuestion();
 
-  this.showCombatUI(question, (playerAnswer) => {
-    const result = this.mathSystem.checkAnswer(playerAnswer);
+    this.showCombatUI(question, (playerAnswer) => {
+      const result = this.mathSystem.checkAnswer(playerAnswer);
 
-    if (result.correct) {
-      this.playerPowerUp = 'Attack Boost';
+      if (result.correct) {
+        this.playerPowerUp = 'Attack Boost';
 
-      this.add.text(640, 150, 'Power-Up Earned: Attack Boost!', {
-        fontSize: '28px',
-        color: '#00ff99',
-        backgroundColor: '#000000',
-        padding: { left: 10, right: 10, top: 5, bottom: 5 }
-      }).setOrigin(0.5).setDepth(150);
+        this.add.text(640, 150, 'Power-Up Earned: Attack Boost!', {
+          fontSize: '28px',
+          color: '#00ff99',
+          backgroundColor: '#000000',
+          padding: { left: 10, right: 10, top: 5, bottom: 5 }
+        }).setOrigin(0.5).setDepth(150);
 
-      console.log('Player earned Attack Boost');
-    } else {
-      this.add.text(640, 150, 'Wrong answer! No power-up earned.', {
-        fontSize: '28px',
-        color: '#ff4444',
-        backgroundColor: '#000000',
-        padding: { left: 10, right: 10, top: 5, bottom: 5 }
-      }).setOrigin(0.5).setDepth(150);
-    }
+        console.log('Player earned Attack Boost');
+      } else {
+        this.add.text(640, 150, 'Wrong answer! No power-up earned.', {
+          fontSize: '28px',
+          color: '#ff4444',
+          backgroundColor: '#000000',
+          padding: { left: 10, right: 10, top: 5, bottom: 5 }
+        }).setOrigin(0.5).setDepth(150);
+      }
 
-    this.endPlayerTurn();
-  });
-}
+      this.endPlayerTurn();
+    });
+  }
 
-gameOver() {
-  this.currentTurn = 'none';
-  this.input.enabled = false;
+  gameOver() {
+    this.currentTurn = 'none';
+    this.input.enabled = false;
 
-  this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.75).setDepth(100);
+    this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.75).setDepth(100);
 
-  this.add.text(640, 300, 'GAME OVER', {
-    fontSize: '64px',
-    color: '#ff0000',
-    fontStyle: 'bold'
-  }).setOrigin(0.5).setDepth(101);
+    this.add.text(640, 300, 'GAME OVER', {
+      fontSize: '64px',
+      color: '#ff0000',
+      fontStyle: 'bold'
+    }).setOrigin(0.5).setDepth(101);
 
-  this.add.text(640, 370, 'Your ship was destroyed', {
-    fontSize: '28px',
-    color: '#ffffff'
-  }).setOrigin(0.5).setDepth(101);
+    this.add.text(640, 370, 'Your ship was destroyed', {
+      fontSize: '28px',
+      color: '#ffffff'
+    }).setOrigin(0.5).setDepth(101);
 
-  const restartBtn = this.add.text(640, 460, 'Restart Level', {
-    fontSize: '28px',
-    backgroundColor: '#ffffff',
-    color: '#000000',
-    padding: { left: 15, right: 15, top: 8, bottom: 8 }
-  }).setOrigin(0.5).setInteractive().setDepth(102);
+    const restartBtn = this.add.text(640, 460, 'Restart Level', {
+      fontSize: '28px',
+      backgroundColor: '#ffffff',
+      color: '#000000',
+      padding: { left: 15, right: 15, top: 8, bottom: 8 }
+    }).setOrigin(0.5).setInteractive().setDepth(102);
 
-  restartBtn.on('pointerdown', () => {
-    this.scene.restart();
-  });
-}
+    restartBtn.on('pointerdown', () => {
+      this.scene.restart();
+    });
+  }
 
-levelComplete() {
-  this.currentTurn = 'none';
-  this.input.enabled = false;
+  levelComplete() {
+    this.currentTurn = 'none';
+    this.input.enabled = false;
 
-  this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.75).setDepth(100);
+    this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.75).setDepth(100);
 
-  this.add.text(640, 300, 'MISSION COMPLETE', {
-    fontSize: '60px',
-    color: '#00ff99',
-    fontStyle: 'bold'
-  }).setOrigin(0.5).setDepth(101);
+    this.add.text(640, 300, 'MISSION COMPLETE', {
+      fontSize: '60px',
+      color: '#00ff99',
+      fontStyle: 'bold'
+    }).setOrigin(0.5).setDepth(101);
 
-  this.add.text(640, 370, 'Enemy defeated!', {
-    fontSize: '30px',
-    color: '#ffffff'
-  }).setOrigin(0.5).setDepth(101);
+    this.add.text(640, 370, 'Enemy defeated!', {
+      fontSize: '30px',
+      color: '#ffffff'
+    }).setOrigin(0.5).setDepth(101);
 
-  const nextBtn = this.add.text(640, 460, 'Back to Level Select', {
-    fontSize: '28px',
-    backgroundColor: '#ffffff',
-    color: '#000000',
-    padding: { left: 15, right: 15, top: 8, bottom: 8 }
-  }).setOrigin(0.5).setInteractive().setDepth(102);
+    const nextBtn = this.add.text(640, 460, 'Back to Level Select', {
+      fontSize: '28px',
+      backgroundColor: '#ffffff',
+      color: '#000000',
+      padding: { left: 15, right: 15, top: 8, bottom: 8 }
+    }).setOrigin(0.5).setInteractive().setDepth(102);
 
-  nextBtn.on('pointerdown', () => {
-    this.scene.start('LevelSelect');
-  });
-}
+    nextBtn.on('pointerdown', () => {
+      this.scene.start('LevelSelect');
+    });
+  }
 
   showCombatUI(question, callback) {
-
-    // lock gameplay
     this.currentTurn = 'combat';
 
-    // dark background overlay
     const overlay = this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.6).setDepth(100);
 
-    // panel box
     const panel = this.add.rectangle(640, 360, 500, 250, 0x222222, 1).setDepth(101);
     panel.setStrokeStyle(2, 0xffffff);
 
-    // question text
     const text = this.add.text(640, 290, question, {
-     fontSize: '28px',
-     color: '#ffffff'
+      fontSize: '28px',
+      color: '#ffffff'
     }).setOrigin(0.5).setDepth(102);
 
-    // input box (fake UI input)
     const inputBox = this.add.rectangle(640, 360, 200, 40, 0xffffff, 1).setDepth(101);
 
     const inputText = this.add.text(640, 360, '', {
-     fontSize: '24px',
-     color: '#000'
-   }).setOrigin(0.5).setDepth(102);
+      fontSize: '24px',
+      color: '#000'
+    }).setOrigin(0.5).setDepth(102);
 
-// capture keyboard input
-let answer = '';
+    let answer = '';
 
-const button = this.add.text(640, 420, 'SUBMIT', {
-  fontSize: '24px',
-  backgroundColor: '#ffffff',
-  color: '#000',
-  padding: { left: 10, right: 10, top: 5, bottom: 5 }
-}).setOrigin(0.5).setInteractive().setDepth(102);
+    const button = this.add.text(640, 420, 'SUBMIT', {
+      fontSize: '24px',
+      backgroundColor: '#ffffff',
+      color: '#000',
+      padding: { left: 10, right: 10, top: 5, bottom: 5 }
+    }).setOrigin(0.5).setInteractive().setDepth(102);
 
-let keyListener;
+    let keyListener;
 
-const submit = () => {
-  overlay.destroy();
-  panel.destroy();
-  text.destroy();
-  inputBox.destroy();
-  inputText.destroy();
-  button.destroy();
+    const submit = () => {
+      overlay.destroy();
+      panel.destroy();
+      text.destroy();
+      inputBox.destroy();
+      inputText.destroy();
+      button.destroy();
 
-  this.input.keyboard.off('keydown', keyListener);
+      this.input.keyboard.off('keydown', keyListener);
 
-  callback(answer);
-};
+      callback(answer);
+    };
 
-keyListener = (event) => {
-  if (event.key === 'Backspace') {
-    answer = answer.slice(0, -1);
-  }
-  else if (event.key === 'Enter') {
-    submit();
-  }
-  else if (!isNaN(event.key)) {
-    answer += event.key;
-  }
+    keyListener = (event) => {
+      if (event.key === 'Backspace') {
+        answer = answer.slice(0, -1);
+      }
+      else if (event.key === 'Enter') {
+        submit();
+      }
+      else if (!isNaN(event.key)) {
+        answer += event.key;
+      }
 
-  inputText.setText(answer);
-};
+      inputText.setText(answer);
+    };
 
-this.input.keyboard.on('keydown', keyListener);
+    this.input.keyboard.on('keydown', keyListener);
 
-button.on('pointerdown', submit);
+    button.on('pointerdown', submit);
   }
 
   update() {
     if (this.player) {
-        this.player.updateHealthBar();
+      this.player.updateHealthBar();
     }
 
     this.enemies.forEach(e => {
-        if (e.isAlive) e.updateHealthBar();
+      if (e.isAlive) e.updateHealthBar();
     });
+  }
+
+  createEnergyUI() {
+    const style = { fontSize: '18px', fill: '#fff', backgroundColor: '#333', padding: 5 };
+
+    const panel = this.add.rectangle(1060, 0, 220, 220, 0x000000, 0.7).setOrigin(0);
+    panel.setStrokeStyle(2, 0xffffff);
+
+    this.energyText = this.add.text(1090, 30, `Energy: ${this.player.energyPoints}`, { fontSize: '20px', fill: '#00ff00' });
+    const atkBtn = this.add.text(1090, 70, '[+] Add Attack', style).setInteractive();
+    const defBtn = this.add.text(1090, 120, '[+] Add Defense', style).setInteractive();
+    const resetBtn = this.add.text(1090, 170, '[Reset Points]', { fontSize: '16px', fill: '#ff0000' }).setInteractive();
+
+    atkBtn.on('pointerdown', () => {
+      if (this.player.energyPoints > 0) {
+        this.player.attackEnergy++;
+        this.player.energyPoints--;
+        this.updateEnergyDisplay();
+      }
+    });
+
+    defBtn.on('pointerdown', () => {
+      if (this.player.energyPoints > 0) {
+        this.player.defenseEnergy++;
+        this.player.energyPoints--;
+        this.updateEnergyDisplay();
+      }
+    });
+
+    resetBtn.on('pointerdown', () => {
+      this.player.energyPoints += (this.player.attackEnergy + this.player.defenseEnergy);
+      this.player.attackEnergy = 0;
+      this.player.defenseEnergy = 0;
+      this.updateEnergyDisplay();
+    });
+
+    this.updateEnergyDisplay();
+  }
+
+  updateEnergyDisplay() {
+    this.energyText.setText(`Energy: ${this.player.energyPoints}`);
   }
 }
