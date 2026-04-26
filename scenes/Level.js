@@ -201,34 +201,42 @@ export class Level extends Phaser.Scene {
   }
 
   handlePlanetChallenge() {
-    const question = this.mathSystem.generateQuestion();
+  const question = this.mathSystem.generateQuestion();
 
-    this.showCombatUI(question, (playerAnswer) => {
-      const result = this.mathSystem.checkAnswer(playerAnswer);
+  this.showCombatUI(question, (playerAnswer) => {
+    const result = this.mathSystem.checkAnswer(playerAnswer);
 
-      if (result.correct) {
-        this.playerPowerUp = 'Attack Boost';
+    if (result.correct) {
+      this.playerPowerUp = 'Attack Boost';
 
-        this.add.text(640, 150, 'Power-Up Earned: Attack Boost!', {
-          fontSize: '28px',
-          color: '#00ff99',
-          backgroundColor: '#000000',
-          padding: { left: 10, right: 10, top: 5, bottom: 5 }
-        }).setOrigin(0.5).setDepth(150);
+      const powerText = this.add.text(640, 150, 'Power-Up Earned: Attack Boost!', {
+        fontSize: '28px',
+        color: '#00ff99',
+        backgroundColor: '#000000',
+        padding: { left: 10, right: 10, top: 5, bottom: 5 }
+      }).setOrigin(0.5).setDepth(150);
 
-        console.log('Player earned Attack Boost');
-      } else {
-        this.add.text(640, 150, 'Wrong answer! No power-up earned.', {
-          fontSize: '28px',
-          color: '#ff4444',
-          backgroundColor: '#000000',
-          padding: { left: 10, right: 10, top: 5, bottom: 5 }
-        }).setOrigin(0.5).setDepth(150);
-      }
+      this.time.delayedCall(1500, () => {
+        powerText.destroy();
+      });
 
-      this.endPlayerTurn();
-    });
-  }
+      console.log('Player earned Attack Boost');
+    } else {
+      const wrongText = this.add.text(640, 150, 'Wrong answer! No power-up earned.', {
+        fontSize: '28px',
+        color: '#ff4444',
+        backgroundColor: '#000000',
+        padding: { left: 10, right: 10, top: 5, bottom: 5 }
+      }).setOrigin(0.5).setDepth(150);
+
+      this.time.delayedCall(1500, () => {
+        wrongText.destroy();
+      });
+    }
+
+    this.endPlayerTurn();
+  });
+}
 
   gameOver() {
     this.currentTurn = 'none';
