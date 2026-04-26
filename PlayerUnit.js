@@ -13,7 +13,7 @@ export default class PlayerUnit extends Unit {
         this.attackEnergy = 0;
         this.defenseEnergy = 0;
     }
-
+//test message
     getEnergyStats() {
         return {
             // Base damage is 10; every point adds 20% extra damage
