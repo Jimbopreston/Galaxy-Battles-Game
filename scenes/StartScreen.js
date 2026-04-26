@@ -11,9 +11,11 @@ export class StartScreen extends Phaser.Scene{
         this.background = this.add.tileSprite(640, 360, 1920, 1080, 'background');
 
         this.add.text(640, 200, 'Galaxy Battles', { 
-            fontSize: '32px', fill: '#FFFFFF' 
-            }).setOrigin(0.5);
-        
+          fontSize: '72px',
+          fill: '#FFD700',
+          stroke: '#000000',
+          strokeThickness: 6
+        }).setOrigin(0.5);
 
     const startBtn = this.add.text(640,640, 'Start Game', {
         fontSize: '32px',

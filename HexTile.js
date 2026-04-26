@@ -12,6 +12,14 @@ export default class HexTile {
     this.isDiscovered = false;
     this.occupant = null;
 
+    // 🧠 TILE TYPES (NEW)
+    this.blocked = false;        // stops movement
+    this.planet = false;         // planet tile
+    this.planetSprite = null;
+
+    this.terrain = false;        // terrain tile
+    this.terrainSprite = null;
+
     // 🧠 CREATE SPRITE
     this.sprite = scene.add.image(x, y, texture);
     this.sprite.setDisplaySize(96, 84);
@@ -24,6 +32,9 @@ export default class HexTile {
       this.sprite.setTint(0xaaaaaa);
     });
 
+    this.sprite.on('pointerout', () => {
+      this.sprite.clearTint();
+    });
   }
 
   reveal() {
@@ -39,7 +50,7 @@ export default class HexTile {
   }
 
   removeOccupant() {
-    this.occupant = null;
+    this.occupant = null; // ✅ ONLY remove unit (DO NOT touch terrain/planet)
   }
 
   highlight() {

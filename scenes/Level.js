@@ -30,10 +30,19 @@ export class Level extends Phaser.Scene {
     this.load.image('hex', 'assets/tiles/SpaceHexTile.png');
     this.load.image('playerShip', 'assets/images/playerShip.png');
     this.load.image('enemyShip', 'assets/images/enemyship.png');
+    this.load.image('planet', 'assets/images/planet.png');
+    this.load.image('terrain', 'assets/images/terrain.png');
   }
 
   create() {
     this.background = this.add.tileSprite(640, 360, 1920, 1080, 'background');
+
+    this.add.text(640, 40, 'Level 1', {
+      fontSize: '30px',
+      color: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 4
+    }).setOrigin(0.5).setDepth(200);
 
     this.combatUI = null;
     this.answerInput = null;
@@ -41,6 +50,7 @@ export class Level extends Phaser.Scene {
 
     this.selectedUnit = null;
     this.currentTurn = 'player';
+    this.playerPowerUp = null;
 
     this.mathSystem = new MathSystem();
 
@@ -60,6 +70,20 @@ export class Level extends Phaser.Scene {
     });
 
     this.hexGrid.generate();
+
+    const planetTile = this.hexGrid.grid[8][2];
+    planetTile.blocked = true;
+    planetTile.planet = true;
+    planetTile.planetSprite = this.add.image(planetTile.x, planetTile.y, 'planet');
+    planetTile.planetSprite.setDisplaySize(55, 55);
+    planetTile.planetSprite.setDepth(1);
+
+    const terrainTile = this.hexGrid.grid[6][3];
+    terrainTile.blocked = true;
+    terrainTile.terrain = true;
+    terrainTile.terrainSprite = this.add.image(terrainTile.x, terrainTile.y, 'terrain');
+    terrainTile.terrainSprite.setDisplaySize(55, 55);
+    terrainTile.terrainSprite.setDepth(1);
 
     const playerTile = this.hexGrid.grid[2][2];
     const enemyTile = this.hexGrid.grid[5][5];
@@ -116,6 +140,17 @@ export class Level extends Phaser.Scene {
         const unit = this.selectedUnit;
         if (!unit || !unit.reachableTiles) return;
 
+        // 🪐 PLANET POWER-UP
+        if (
+          tile.planet &&
+          unit.reachableTiles.includes(tile)
+        ) {
+          unit.clearSelection();
+          this.handlePlanetChallenge();
+          this.selectedUnit = null;
+          return;
+        } 
+
         // ⚔️ ATTACK
         if (
           tile.occupant &&
@@ -129,11 +164,11 @@ export class Level extends Phaser.Scene {
         }
 
         // 🚶 MOVE
-        if (unit.reachableTiles.includes(tile) && !tile.occupant) {
-          unit.clearSelection();
-          unit.moveTo(tile);
-          this.selectedUnit = null;
-          this.endPlayerTurn();
+        if (unit.reachableTiles.includes(tile) && !tile.occupant && !tile.blocked) {
+        unit.clearSelection();
+        unit.moveTo(tile);
+        this.selectedUnit = null;
+        this.endPlayerTurn();
         }
       });
     });
@@ -149,7 +184,14 @@ export class Level extends Phaser.Scene {
       const result = this.mathSystem.checkAnswer(playerAnswer);
 
       if (result.correct) {
-        enemy.takeDamage(10 * result.damageMultiplier);
+        let damage = 10 * result.damageMultiplier;
+
+        if (this.playerPowerUp === 'Attack Boost') {
+          damage += 10;
+          this.playerPowerUp = null;
+        }
+
+        enemy.takeDamage(damage);
       } else {
         this.player.takeDamage(5);
       }
@@ -160,6 +202,36 @@ export class Level extends Phaser.Scene {
       this.endPlayerTurn();
     });
   }
+
+  handlePlanetChallenge() {
+  const question = this.mathSystem.generateQuestion();
+
+  this.showCombatUI(question, (playerAnswer) => {
+    const result = this.mathSystem.checkAnswer(playerAnswer);
+
+    if (result.correct) {
+      this.playerPowerUp = 'Attack Boost';
+
+      this.add.text(640, 150, 'Power-Up Earned: Attack Boost!', {
+        fontSize: '28px',
+        color: '#00ff99',
+        backgroundColor: '#000000',
+        padding: { left: 10, right: 10, top: 5, bottom: 5 }
+      }).setOrigin(0.5).setDepth(150);
+
+      console.log('Player earned Attack Boost');
+    } else {
+      this.add.text(640, 150, 'Wrong answer! No power-up earned.', {
+        fontSize: '28px',
+        color: '#ff4444',
+        backgroundColor: '#000000',
+        padding: { left: 10, right: 10, top: 5, bottom: 5 }
+      }).setOrigin(0.5).setDepth(150);
+    }
+
+    this.endPlayerTurn();
+  });
+}
 
 gameOver() {
   this.currentTurn = 'none';
