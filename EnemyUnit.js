@@ -11,19 +11,25 @@ export default class EnemyUnit extends Unit {
         this.isAlive = true;
     }
 
-    
+
 
     takeTurn() {
         if (!this.isAlive || !this.scene.player.isAlive) return;
 
-        console.log("Enemy turn");
+        // 1. Calculate current distance to player
+        const distToPlayer = this.scene.hexGrid.hexDistance(this.currentTile, this.scene.player.currentTile);
 
-        // 1. Get all tiles the enemy could move to
+        // 2. If already in range (1 tile away), attack instead of moving
+        if (distToPlayer === 1) {
+            console.log("Enemy is in range! Attacking player.");
+            this.attackPlayer(this.scene.player);
+            return;
+        }
+
+        // 3. Otherwise, find the best tile to move closer
         const options = this.getMoveOptions().filter(t => !t.occupant);
-
         if (options.length === 0) return;
 
-        // 2. Find the tile that is geographically closest to the player's tile
         let target = options[0];
         let minDistance = this.scene.hexGrid.hexDistance(target, this.scene.player.currentTile);
 
@@ -35,8 +41,16 @@ export default class EnemyUnit extends Unit {
             }
         });
 
-        // 3. Move to that closest tile
         this.moveTo(target);
+
+        // 4. Check again after moving: if now adjacent, attack!
+        const newDist = this.scene.hexGrid.hexDistance(target, this.scene.player.currentTile);
+        if (newDist === 1) {
+            // Small delay so move finishes before attack starts
+            this.scene.time.delayedCall(300, () => {
+                this.attackPlayer(this.scene.player);
+            });
+        }
     }
 
     getMoveOptions() {
@@ -60,34 +74,34 @@ export default class EnemyUnit extends Unit {
     }
 
     takeDamage(amount) {
-    if (!this.isAlive) return;
+        if (!this.isAlive) return;
 
-    this.health -= amount;
+        this.health -= amount;
 
-    console.log(this.type + " took " + amount);
+        console.log(this.type + " took " + amount);
 
-    // 🔴 FLASH RED EFFECT
-    this.sprite.setTint(0xff0000);
+        // 🔴 FLASH RED EFFECT
+        this.sprite.setTint(0xff0000);
 
-    this.scene.time.delayedCall(150, () => {
-        if (this.sprite) {
-            this.sprite.clearTint();
+        this.scene.time.delayedCall(150, () => {
+            if (this.sprite) {
+                this.sprite.clearTint();
+            }
+        });
+
+        this.updateHealthBar();
+
+        if (this.health <= 0) {
+            this.isAlive = false;
+
+            if (this.currentTile) {
+                this.currentTile.setOccupant(null);
+            }
+
+            this.sprite.destroy();
+
+            if (this.healthBarBg) this.healthBarBg.destroy();
+            if (this.healthBarFill) this.healthBarFill.destroy();
         }
-    });
-
-    this.updateHealthBar();
-
-    if (this.health <= 0) {
-        this.isAlive = false;
-
-        if (this.currentTile) {
-            this.currentTile.setOccupant(null);
-        }
-
-        this.sprite.destroy();
-
-        if (this.healthBarBg) this.healthBarBg.destroy();
-        if (this.healthBarFill) this.healthBarFill.destroy();
     }
-}
 }

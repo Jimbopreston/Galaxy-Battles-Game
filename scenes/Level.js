@@ -32,10 +32,23 @@ export class Level extends Phaser.Scene {
     this.load.image('enemyShip', 'assets/images/enemyship.png');
     this.load.image('planet', 'assets/images/planet.png');
     this.load.image('terrain', 'assets/images/terrain.png');
+    this.load.audio('bgMusic', ['assets/audio/levelTheme.mp3']);
+    this.load.audio('attackSound', ['assets/audio/attackSound.mp3']);
   }
 
   create() {
     this.background = this.add.tileSprite(640, 360, 1920, 1080, 'background');
+    this.sound.stopByKey('menutheme');
+    const music = this.sound.add('bgMusic', {
+        volume: 0.5, // 50% volume
+        loop: true   // Keep playing until stopped
+    });
+
+    this.attackSound = this.sound.add('attackSound', {
+      volume: 0.6
+    });
+
+    music.play();
 
     this.add.text(640, 40, 'Level 1', {
       fontSize: '30px',
@@ -186,10 +199,12 @@ export class Level extends Phaser.Scene {
           this.playerPowerUp = null;
         }
 
+        this.attackSound.play(); // 🔊 PLAY SOUND HERE
         enemy.takeDamage(damage);
       } else {
         const baseDamage = 10;
         const reducedDamage = Math.max(1, baseDamage - (baseDamage * energyStats.damageReduction));
+        this.attackSound.play();
         this.player.takeDamage(reducedDamage);
       }
 
@@ -269,7 +284,7 @@ export class Level extends Phaser.Scene {
 
   levelComplete() {
     this.currentTurn = 'none';
-    this.input.enabled = false;
+    this.input.enabled = true;
 
     this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.75).setDepth(100);
 
@@ -292,6 +307,8 @@ export class Level extends Phaser.Scene {
     }).setOrigin(0.5).setInteractive().setDepth(102);
 
     nextBtn.on('pointerdown', () => {
+      this.sound.stopAll();
+      this.scene.stop('Level');
       this.scene.start('LevelSelect');
     });
   }

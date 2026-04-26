@@ -5,10 +5,20 @@ export class StartScreen extends Phaser.Scene{
 
     preload(){
         this.load.image('background', '/assets/images/Background.png');
+        this.load.audio('menutheme', '/assets/audio/menuTheme.mp3')
     }
 
     create() {
         this.background = this.add.tileSprite(640, 360, 1920, 1080, 'background');
+
+        if (!this.sound.get('bgMusic')) {
+            const music = this.sound.add('menutheme', {
+            volume: 0.7,
+            loop: true
+            });
+
+            music.play();
+        }
 
         this.add.text(640, 200, 'Galaxy Battles', { 
           fontSize: '72px',
