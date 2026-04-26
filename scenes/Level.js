@@ -154,19 +154,70 @@ export class Level extends Phaser.Scene {
         this.player.takeDamage(5);
       }
 
-      if (!enemy.isAlive) return this.endPlayerTurn();
+      if (!enemy.isAlive) return this.levelComplete();
       if (!this.player.isAlive) return this.gameOver();
 
       this.endPlayerTurn();
     });
   }
 
-  gameOver() {
-    console.log("GAME OVER");
+gameOver() {
+  this.currentTurn = 'none';
+  this.input.enabled = false;
 
-    this.currentTurn = 'none';
-    this.input.enabled = false;
-  }
+  this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.75).setDepth(100);
+
+  this.add.text(640, 300, 'GAME OVER', {
+    fontSize: '64px',
+    color: '#ff0000',
+    fontStyle: 'bold'
+  }).setOrigin(0.5).setDepth(101);
+
+  this.add.text(640, 370, 'Your ship was destroyed', {
+    fontSize: '28px',
+    color: '#ffffff'
+  }).setOrigin(0.5).setDepth(101);
+
+  const restartBtn = this.add.text(640, 460, 'Restart Level', {
+    fontSize: '28px',
+    backgroundColor: '#ffffff',
+    color: '#000000',
+    padding: { left: 15, right: 15, top: 8, bottom: 8 }
+  }).setOrigin(0.5).setInteractive().setDepth(102);
+
+  restartBtn.on('pointerdown', () => {
+    this.scene.restart();
+  });
+}
+
+levelComplete() {
+  this.currentTurn = 'none';
+  this.input.enabled = false;
+
+  this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.75).setDepth(100);
+
+  this.add.text(640, 300, 'MISSION COMPLETE', {
+    fontSize: '60px',
+    color: '#00ff99',
+    fontStyle: 'bold'
+  }).setOrigin(0.5).setDepth(101);
+
+  this.add.text(640, 370, 'Enemy defeated!', {
+    fontSize: '30px',
+    color: '#ffffff'
+  }).setOrigin(0.5).setDepth(101);
+
+  const nextBtn = this.add.text(640, 460, 'Back to Level Select', {
+    fontSize: '28px',
+    backgroundColor: '#ffffff',
+    color: '#000000',
+    padding: { left: 15, right: 15, top: 8, bottom: 8 }
+  }).setOrigin(0.5).setInteractive().setDepth(102);
+
+  nextBtn.on('pointerdown', () => {
+    this.scene.start('LevelSelect');
+  });
+}
 
   showCombatUI(question, callback) {
 
@@ -174,25 +225,25 @@ export class Level extends Phaser.Scene {
     this.currentTurn = 'combat';
 
     // dark background overlay
-    const overlay = this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.6);
+    const overlay = this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.6).setDepth(100);
 
     // panel box
-    const panel = this.add.rectangle(640, 360, 500, 250, 0x222222, 1);
+    const panel = this.add.rectangle(640, 360, 500, 250, 0x222222, 1).setDepth(101);
     panel.setStrokeStyle(2, 0xffffff);
 
     // question text
     const text = this.add.text(640, 290, question, {
-      fontSize: '28px',
-      color: '#ffffff'
-    }).setOrigin(0.5);
+     fontSize: '28px',
+     color: '#ffffff'
+    }).setOrigin(0.5).setDepth(102);
 
     // input box (fake UI input)
-    const inputBox = this.add.rectangle(640, 360, 200, 40, 0xffffff, 1);
+    const inputBox = this.add.rectangle(640, 360, 200, 40, 0xffffff, 1).setDepth(101);
 
     const inputText = this.add.text(640, 360, '', {
-      fontSize: '24px',
-      color: '#000'
-    }).setOrigin(0.5);
+     fontSize: '24px',
+     color: '#000'
+   }).setOrigin(0.5).setDepth(102);
 
 // capture keyboard input
 let answer = '';
@@ -202,7 +253,7 @@ const button = this.add.text(640, 420, 'SUBMIT', {
   backgroundColor: '#ffffff',
   color: '#000',
   padding: { left: 10, right: 10, top: 5, bottom: 5 }
-}).setOrigin(0.5).setInteractive();
+}).setOrigin(0.5).setInteractive().setDepth(102);
 
 let keyListener;
 
