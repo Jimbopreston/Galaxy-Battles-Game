@@ -1,40 +1,28 @@
 import Unit from './Unit.js';
 
-export default class EnemyUnit extends Unit{
-  constructor(scene, tile, texture) {
-    super(scene, tile, texture);
+export default class EnemyUnit extends Unit {
+    constructor(scene, tile, texture) {
+        super(scene, tile, texture);
+        this.createHealthBar();
+        this.type = 'enemy';
+        this.health = 100;
+        this.moveRange = 3;
+        this.reachableTiles = [];
+        this.isAlive = true;
+    }
 
-    this.type = 'enemy';
-    this.health = 100;
-    this.moveRange = 3;
-    this.reachableTiles = [];
-  }
+    takeTurn() {
+        if (!this.isAlive || !this.scene.player.isAlive) return;
 
-  takeTurn() {
-    console.log("Enemy turn triggered");
+        console.log("Enemy turn");
 
-    const neighbors = this.scene.hexGrid.getNeighbors(
-        this.tile.col,
-        this.tile.row
-    );
+        const options = this.getMoveOptions().filter(t => !t.occupant);
 
-    console.log("neighbors:", neighbors.length);
+        if (options.length === 0) return;
 
-    const validTiles = neighbors.filter(t => !t.occupant);
+        const target = options[Math.floor(Math.random() * options.length)];
 
-    console.log("valid tiles:", validTiles.length);
-
-    if (validTiles.length > 0) {
-        const randomTile = validTiles[
-        Math.floor(Math.random() * validTiles.length)
-        ];
-
-        console.log("Moving to:", randomTile.col, randomTile.row);
-
-        this.moveTo(randomTile);
-        } else {
-            console.log("No valid tiles to move");
-        }
+        this.moveTo(target);
     }
 
     getMoveOptions() {
@@ -44,10 +32,39 @@ export default class EnemyUnit extends Unit{
         );
     }
 
-    takeTurn() {
-        const options = this.getMoveOptions();
-        const target = options[Math.floor(Math.random() * options.length)];
-        if (!target) return;
-        this.moveTo(target);
+    // ⚔️ Ene   my attack
+    attackPlayer(player) {
+        if (!this.isAlive || !player.isAlive) return;
+
+        const damage = 10;
+
+        player.takeDamage(damage);
+
+        console.log("Player hit for", damage);
+
+        // ❌ DO NOT call endPlayerTurn here
+    }
+
+    takeDamage(amount) {
+        if (!this.isAlive) return;
+
+        this.health -= amount;
+
+        console.log(this.type + " took " + amount);
+
+        this.updateHealthBar();
+
+        if (this.health <= 0) {
+            this.isAlive = false;
+
+            if (this.currentTile) {
+                this.currentTile.setOccupant(null);
+            }
+
+            this.sprite.destroy();
+
+            if (this.healthBarBg) this.healthBarBg.destroy();
+            if (this.healthBarFill) this.healthBarFill.destroy();
+        }
     }
 }

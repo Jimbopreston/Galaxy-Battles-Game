@@ -53,7 +53,7 @@ export default class HexTile {
         unit.clearSelection();
         unit.moveTo(this);
 
-        scene.endTurn();
+        scene.endPlayerTurn();
       }
     });
   }
