@@ -6,22 +6,36 @@ export default class EnemyUnit extends Unit {
         this.createHealthBar();
         this.type = 'enemy';
         this.health = 100;
-        this.moveRange = 3;
+        this.moveRange = 2;
         this.reachableTiles = [];
         this.isAlive = true;
     }
+
+    
 
     takeTurn() {
         if (!this.isAlive || !this.scene.player.isAlive) return;
 
         console.log("Enemy turn");
 
+        // 1. Get all tiles the enemy could move to
         const options = this.getMoveOptions().filter(t => !t.occupant);
 
         if (options.length === 0) return;
 
-        const target = options[Math.floor(Math.random() * options.length)];
+        // 2. Find the tile that is geographically closest to the player's tile
+        let target = options[0];
+        let minDistance = this.scene.hexGrid.hexDistance(target, this.scene.player.currentTile);
 
+        options.forEach(tile => {
+            const dist = this.scene.hexGrid.hexDistance(tile, this.scene.player.currentTile);
+            if (dist < minDistance) {
+                minDistance = dist;
+                target = tile;
+            }
+        });
+
+        // 3. Move to that closest tile
         this.moveTo(target);
     }
 

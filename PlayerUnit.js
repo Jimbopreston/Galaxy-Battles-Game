@@ -9,6 +9,18 @@ export default class PlayerUnit extends Unit {
         this.moveRange = 3;
         this.reachableTiles = [];
         this.isAlive = true;
+        this.energyPoints = 5;
+        this.attackEnergy = 0;
+        this.defenseEnergy = 0;
+    }
+
+    getEnergyStats() {
+        return {
+            // Base damage is 10; every point adds 20% extra damage
+            attackMultiplier: 1 + (this.attackEnergy * 0.2),
+            // Every point reduce incoming damage by 10%
+            damageReduction: this.defenseEnergy * 0.1
+        };
     }
 
     takeTurn() {
