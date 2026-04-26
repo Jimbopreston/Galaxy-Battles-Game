@@ -69,6 +69,29 @@ export class Level extends Phaser.Scene {
     this.enemies = [];
     this.enemies.push(new EnemyUnit(this, enemyTile, 'enemyShip'));
 
+    this.enemies.forEach(enemy => {
+  enemy.sprite.setInteractive();
+
+  enemy.sprite.on('pointerdown', () => {
+    if (this.currentTurn !== 'player') return;
+    if (!this.selectedUnit) return;
+    if (!enemy.isAlive) return;
+
+    const distance = this.hexGrid.hexDistance(
+      this.selectedUnit.currentTile,
+      enemy.currentTile
+    );
+
+    if (distance <= 3) {
+      this.selectedUnit.clearSelection();
+      this.handleCombat(enemy);
+      this.selectedUnit = null;
+    } else {
+      console.log("Enemy too far away");
+    }
+  });
+});
+
     // 🧍 PLAYER SELECT
     this.player.sprite.setInteractive();
 
@@ -171,50 +194,48 @@ export class Level extends Phaser.Scene {
       color: '#000'
     }).setOrigin(0.5);
 
-    // capture keyboard input
-    let answer = '';
+// capture keyboard input
+let answer = '';
 
-    const keyListener = this.input.keyboard.on('keydown', (event) => {
+const button = this.add.text(640, 420, 'SUBMIT', {
+  fontSize: '24px',
+  backgroundColor: '#ffffff',
+  color: '#000',
+  padding: { left: 10, right: 10, top: 5, bottom: 5 }
+}).setOrigin(0.5).setInteractive();
 
-      if (event.key === 'Backspace') {
-        answer = answer.slice(0, -1);
-      }
-      else if (event.key === 'Enter') {
-        submit();
-      }
-      else if (!isNaN(event.key)) {
-        answer += event.key;
-      }
+let keyListener;
 
-      inputText.setText(answer);
-    });
+const submit = () => {
+  overlay.destroy();
+  panel.destroy();
+  text.destroy();
+  inputBox.destroy();
+  inputText.destroy();
+  button.destroy();
 
-    // submit button
-    const button = this.add.text(640, 420, 'SUBMIT', {
-      fontSize: '24px',
-      backgroundColor: '#ffffff',
-      color: '#000',
-      padding: { left: 10, right: 10, top: 5, bottom: 5 }
-    }).setOrigin(0.5).setInteractive();
+  this.input.keyboard.off('keydown', keyListener);
 
-    const submit = () => {
+  callback(answer);
+};
 
-      // cleanup UI
-      overlay.destroy();
-      panel.destroy();
-      text.destroy();
-      inputBox.destroy();
-      inputText.destroy();
-      button.destroy();
+keyListener = (event) => {
+  if (event.key === 'Backspace') {
+    answer = answer.slice(0, -1);
+  }
+  else if (event.key === 'Enter') {
+    submit();
+  }
+  else if (!isNaN(event.key)) {
+    answer += event.key;
+  }
 
-      this.input.keyboard.off('keydown');
-      keyListener.destroy();
+  inputText.setText(answer);
+};
 
-      // return answer
-      callback(answer);
-    };
+this.input.keyboard.on('keydown', keyListener);
 
-    button.on('pointerdown', submit);
+button.on('pointerdown', submit);
   }
 
   update() {

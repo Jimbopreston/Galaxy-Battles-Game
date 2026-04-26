@@ -24,38 +24,6 @@ export default class HexTile {
       this.sprite.setTint(0xaaaaaa);
     });
 
-    this.sprite.on('pointerout', () => {
-      this.sprite.clearTint();
-    });
-
-    this.sprite.on('pointerdown', () => {
-
-      const scene = this.scene;
-
-      if (scene.currentTurn !== 'player') return;
-
-      // select unit
-      if (this.occupant && this.occupant.type === 'player') {
-        scene.selectedUnit = this.occupant;
-        this.occupant.select();
-        return;
-      }
-
-      // move unit
-      const unit = scene.selectedUnit;
-
-      if (!unit) return;
-
-      if (!unit.reachableTiles) return;
-
-      if (unit.reachableTiles.includes(this)) {
-
-        unit.clearSelection();
-        unit.moveTo(this);
-
-        scene.endPlayerTurn();
-      }
-    });
   }
 
   reveal() {
