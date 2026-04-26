@@ -42,29 +42,38 @@ export default class EnemyUnit extends Unit {
 
         console.log("Player hit for", damage);
 
-        // ❌ DO NOT call endPlayerTurn here
+        // DO NOT call endPlayerTurn here
     }
 
     takeDamage(amount) {
-        if (!this.isAlive) return;
+    if (!this.isAlive) return;
 
-        this.health -= amount;
+    this.health -= amount;
 
-        console.log(this.type + " took " + amount);
+    console.log(this.type + " took " + amount);
 
-        this.updateHealthBar();
+    // 🔴 FLASH RED EFFECT
+    this.sprite.setTint(0xff0000);
 
-        if (this.health <= 0) {
-            this.isAlive = false;
-
-            if (this.currentTile) {
-                this.currentTile.setOccupant(null);
-            }
-
-            this.sprite.destroy();
-
-            if (this.healthBarBg) this.healthBarBg.destroy();
-            if (this.healthBarFill) this.healthBarFill.destroy();
+    this.scene.time.delayedCall(150, () => {
+        if (this.sprite) {
+            this.sprite.clearTint();
         }
+    });
+
+    this.updateHealthBar();
+
+    if (this.health <= 0) {
+        this.isAlive = false;
+
+        if (this.currentTile) {
+            this.currentTile.setOccupant(null);
+        }
+
+        this.sprite.destroy();
+
+        if (this.healthBarBg) this.healthBarBg.destroy();
+        if (this.healthBarFill) this.healthBarFill.destroy();
     }
+}
 }
