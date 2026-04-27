@@ -65,16 +65,23 @@ export const LEVELS = {
 
   level4: {
     name: "Level 4",
-    playerStart: { col: 0, row: 6 },
+    playerStart: { col: 0, row: 3 },
 
     enemies: [
-      { col: 5, row: 5 },
-      { col: 8, row: 4 },
-      { col: 10, row: 2 }
+      { col: 12, row: 6 },
+      { col: 8, row: 2 },
+      { col: 4, row: 4 }
     ],
 
-    planets: [],
-    terrain: [],
+    planets: [{col: 3, row: 3}],
+    terrain: [
+        {col: 6, row: 0},
+        {col: 6, row: 1},
+        {col: 6, row: 2},
+        {col: 6, row: 4},
+        {col: 6, row: 5},
+        {col: 6, row: 6}
+    ],
 
     rules: {
       allowNegatives: true,
