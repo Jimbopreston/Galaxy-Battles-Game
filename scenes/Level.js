@@ -40,12 +40,6 @@ export class Level extends Phaser.Scene {
 
     music.play();
     //---------------------------------------------------------------------------------------------------------------------------------------------
-    this.add.text(640, 40, 'Level 1', {
-      fontSize: '30px',
-      color: '#ffffff',
-      stroke: '#000000',
-      strokeThickness: 4
-    }).setOrigin(0.5).setDepth(200);
 
     this.combatUI = null;
     this.answerInput = null;
@@ -77,6 +71,27 @@ export class Level extends Phaser.Scene {
       console.error("Level not found:", this.levelKey);
       return;
     }
+
+    this.add.text(640, 40, level.name, {
+      fontSize: '30px',
+      color: '#ffffff',
+      stroke: '#000000',
+      strokeThickness: 4
+    }).setOrigin(0.5).setDepth(200);
+
+    const quitBtn = this.add.text(30, 30, '← Quit', {
+      fontSize: '24px',
+      color: '#ffffff',
+      backgroundColor: '#000000',
+      padding: { left: 10, right: 10, top: 5, bottom: 5 }
+    }).setOrigin(0, 0).setInteractive().setDepth(250);
+
+    quitBtn.on('pointerdown', () => {
+      this.sound.stopAll();
+      this.scene.stop('Level');
+      this.scene.start('LevelSelect');
+    });
+
     this.mathSystem.allowNegatives = level.rules.allowNegatives;
     this.mathSystem.maxNumber = level.rules.maxNumber;
 
@@ -291,7 +306,21 @@ export class Level extends Phaser.Scene {
     restartBtn.on('pointerdown', () => {
       this.scene.restart();
     });
+
+        const levelSelectBtn = this.add.text(640, 520, 'Back to Level Select', {
+      fontSize: '28px',
+      backgroundColor: '#ffffff',
+      color: '#000000',
+      padding: { left: 15, right: 15, top: 8, bottom: 8 }
+    }).setOrigin(0.5).setInteractive().setDepth(102);
+
+    levelSelectBtn.on('pointerdown', () => {
+      this.sound.stopAll();
+      this.scene.stop('Level');
+      this.scene.start('LevelSelect');
+    });
   }
+ 
 
   levelComplete() {
     this.currentTurn = 'none';
