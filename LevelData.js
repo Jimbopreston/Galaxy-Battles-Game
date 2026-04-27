@@ -59,7 +59,7 @@ export const LEVELS = {
 
     rules: {
       allowNegatives: true,
-      maxNumber: 50
+      maxNumber: 20
     }
   },
 
@@ -85,7 +85,7 @@ export const LEVELS = {
 
     rules: {
       allowNegatives: true,
-      maxNumber: 50
+      maxNumber: 30
     }
   }
 

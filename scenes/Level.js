@@ -28,17 +28,18 @@ export class Level extends Phaser.Scene {
   create() {
     this.background = this.add.tileSprite(640, 360, 1920, 1080, 'background');
     //-------------------------------------------------------------------------------------------------------------------------------------------
-    this.sound.stopByKey('menutheme');
-    const music = this.sound.add('bgMusic', {
-      volume: 0.5, // 50% volume
-      loop: true   // Keep playing until stopped
+    this.sound.stopAll();
+
+    this.music = this.sound.add('bgMusic', {
+      volume: 0.5,
+      loop: true
     });
 
     this.attackSound = this.sound.add('attackSound', {
       volume: 0.6
     });
 
-    music.play();
+    this.music.play();
     //---------------------------------------------------------------------------------------------------------------------------------------------
 
     this.combatUI = null;
@@ -304,6 +305,7 @@ export class Level extends Phaser.Scene {
     }).setOrigin(0.5).setInteractive().setDepth(102);
 
     restartBtn.on('pointerdown', () => {
+      this.music.stop();
       this.scene.restart();
     });
 
