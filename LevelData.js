@@ -7,7 +7,7 @@ export const LEVELS = {
       { col: 12, row: 3 }
     ],
 
-    planets: [],
+    planets: [ ],
 
     terrain: [],
 
@@ -19,20 +19,18 @@ export const LEVELS = {
 
   level2: {
     name: "Level 2",
-    playerStart: { col: 1, row: 1 },
+    playerStart: { col: 0, row: 3},
 
     enemies: [
-      { col: 4, row: 4 },
-      { col: 7, row: 2 }
+      { col: 12, row: 2 },
+      { col: 12, row: 4 }
     ],
 
     planets: [
-      { col: 9, row: 5 }
+      {col: 3, row: 3}
     ],
 
     terrain: [
-      { col: 3, row: 3 },
-      { col: 6, row: 6 }
     ],
 
     rules: {
@@ -43,16 +41,21 @@ export const LEVELS = {
 
   level3: {
     name: "Level 3",
-    playerStart: { col: 0, row: 6 },
+    playerStart: { col: 0, row: 3 },
 
     enemies: [
-      { col: 5, row: 5 },
-      { col: 8, row: 4 },
+      { col: 12, row: 2 },
+      { col: 12, row: 4 },
       
     ],
 
-    planets: [],
-    terrain: [],
+    planets: [{col: 3, row: 3}],
+    terrain: [
+        {col: 6, row: 0},
+        {col: 6, row: 1},
+        {col: 6, row: 5},
+        {col: 6, row: 6}
+    ],
 
     rules: {
       allowNegatives: true,
