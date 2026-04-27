@@ -27,7 +27,7 @@ export default class EnemyUnit extends Unit {
         }
 
         // 3. Otherwise, find the best tile to move closer
-        const options = this.getMoveOptions().filter(t => !t.occupant);
+        const options = this.getMoveOptions().filter(t => !t.occupant && !t.blocked);
         if (options.length === 0) return;
 
         let target = options[0];
