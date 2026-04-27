@@ -5,8 +5,8 @@ export default class MathSystem {
     }
 
     generateQuestion() {
-        const num1 = Phaser.Math.Between(1, 10);
-        const num2 = Phaser.Math.Between(1, 10);
+        let num1 = Phaser.Math.Between(1, this.maxNumber || 10);
+        let num2 = Phaser.Math.Between(1, this.maxNumber || 10);
         const operator = Phaser.Math.RND.pick(['+', '-', '*']);
 
         let question;
@@ -18,8 +18,13 @@ export default class MathSystem {
                 answer = num1 + num2;
                 break;
             case '-':
+                // ensure no negative answers
+                if (!this.allowNegatives && num2 > num1) {
+                    [num1, num2] = [num2, num1];
+                }
                 question = `${num1} - ${num2}`;
-                answer = num1 - num2;
+                answer
+                    = num1 - num2;
                 break;
             case '*':
                 question = `${num1} × ${num2}`;

@@ -21,7 +21,7 @@ export class LevelSelect extends Phaser.Scene{
     }).setOrigin(0.5).setInteractive();
 
     levelOneBtn.on('pointerdown', () => {
-        this.scene.start('Level', { level: 1 });
+        this.scene.start('Level', { levelKey: 'level1' });
     })
 
     const levelTwoBtn = this.add.text(640,350, 'Level Two', {
@@ -31,7 +31,7 @@ export class LevelSelect extends Phaser.Scene{
     }).setOrigin(0.5).setInteractive();
 
     levelTwoBtn.on('pointerdown', () => {
-        this.scene.start('Level', { level: 2 });
+        this.scene.start('Level', { levelKey: 'level2' });
     })
 
     const levelThreeBtn = this.add.text(640,450, 'Level Three', {
@@ -41,7 +41,7 @@ export class LevelSelect extends Phaser.Scene{
     }).setOrigin(0.5).setInteractive();
 
     levelThreeBtn.on('pointerdown', () => {
-        this.scene.start('Level', { level: 3 });
+        this.scene.start('Level', { levelKey: 'level3' });
     })
 
     const levelFourBtn = this.add.text(640,550, 'Level Four', {
@@ -51,7 +51,7 @@ export class LevelSelect extends Phaser.Scene{
     }).setOrigin(0.5).setInteractive();
 
     levelFourBtn.on('pointerdown', () => {
-        this.scene.start('Level', { level: 4 });
+        this.scene.start('Level', { levelKey: 'level4' });
     })
 
    }

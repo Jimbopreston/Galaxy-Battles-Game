@@ -5,7 +5,7 @@ export default class PlayerUnit extends Unit {
         super(scene, tile, texture);
         this.createHealthBar();
         this.type = 'player';
-        this.health = 100;
+        this.health = 150;
         this.moveRange = 3;
         this.reachableTiles = [];
         this.isAlive = true;

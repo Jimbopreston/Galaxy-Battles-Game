@@ -2,6 +2,7 @@ import HexGrid from '../HexGrid.js';
 import PlayerUnit from '../PlayerUnit.js';
 import EnemyUnit from '../EnemyUnit.js';
 import MathSystem from '../MathSystem.js';
+import { LEVELS } from '../LevelData.js';
 
 export class Level extends Phaser.Scene {
 
@@ -9,22 +10,10 @@ export class Level extends Phaser.Scene {
     super('Level');
   }
 
-  endPlayerTurn() {
-    if (!this.player.isAlive) return;
-
-    this.currentTurn = 'enemy';
-
-    this.time.delayedCall(300, () => {
-      this.enemies.forEach(enemy => {
-        if (enemy.isAlive) enemy.takeTurn();
-      });
-
-      if (this.player.isAlive) {
-        this.currentTurn = 'player';
-      }
-    });
+  init(data) {
+    this.levelKey = data.levelKey; // 👈 IMPORTANT
   }
-
+  //----------------------------------------------------------------------------------------------------------------------------------------
   preload() {
     this.load.image('background', '/assets/images/Background.png');
     this.load.image('hex', 'assets/tiles/SpaceHexTile.png');
@@ -38,10 +27,11 @@ export class Level extends Phaser.Scene {
 
   create() {
     this.background = this.add.tileSprite(640, 360, 1920, 1080, 'background');
+    //-------------------------------------------------------------------------------------------------------------------------------------------
     this.sound.stopByKey('menutheme');
     const music = this.sound.add('bgMusic', {
-        volume: 0.5, // 50% volume
-        loop: true   // Keep playing until stopped
+      volume: 0.5, // 50% volume
+      loop: true   // Keep playing until stopped
     });
 
     this.attackSound = this.sound.add('attackSound', {
@@ -49,7 +39,7 @@ export class Level extends Phaser.Scene {
     });
 
     music.play();
-
+    //---------------------------------------------------------------------------------------------------------------------------------------------
     this.add.text(640, 40, 'Level 1', {
       fontSize: '30px',
       color: '#ffffff',
@@ -63,14 +53,13 @@ export class Level extends Phaser.Scene {
     this.selectedUnit = null;
     this.currentTurn = 'player';
     this.playerPowerUp = null;
-
+    //------------------------------------------------------------------------------------------------------------------------------------------------
     this.mathSystem = new MathSystem();
-
     this.questionText = this.add.text(100, 100, '', {
       fontSize: '32px',
       fill: '#fff'
     });
-
+    //-------------------------------------------------------------------------------------------------------------------------------
     this.hexGrid = new HexGrid(this, {
       rows: 7,
       cols: 13,
@@ -82,29 +71,53 @@ export class Level extends Phaser.Scene {
     });
 
     this.hexGrid.generate();
+    //---------------------------------------------------------------------------------------------------------------------------------------
+    const level = LEVELS[this.levelKey];
+    if (!level) {
+      console.error("Level not found:", this.levelKey);
+      return;
+    }
+    this.mathSystem.allowNegatives = level.rules.allowNegatives;
+    this.mathSystem.maxNumber = level.rules.maxNumber;
 
-    const planetTile = this.hexGrid.grid[8][2];
-    planetTile.blocked = true;
-    planetTile.planet = true;
-    planetTile.planetSprite = this.add.image(planetTile.x, planetTile.y, 'planet');
-    planetTile.planetSprite.setDisplaySize(55, 55);
-    planetTile.planetSprite.setDepth(1);
+    level.terrain.forEach(t => {
+      const tile = this.hexGrid.grid[t.col][t.row];
 
-    const terrainTile = this.hexGrid.grid[6][3];
-    terrainTile.blocked = true;
-    terrainTile.terrain = true;
-    terrainTile.terrainSprite = this.add.image(terrainTile.x, terrainTile.y, 'terrain');
-    terrainTile.terrainSprite.setDisplaySize(55, 55);
-    terrainTile.terrainSprite.setDepth(1);
+      tile.blocked = true;
+      tile.terrain = true;
 
-    const playerTile = this.hexGrid.grid[2][2];
-    const enemyTile = this.hexGrid.grid[5][5];
+      const sprite = this.add.image(tile.x, tile.y, 'terrain');
+      sprite.setDisplaySize(55, 55);
+      sprite.setDepth(1);
 
+      tile.terrainSprite = sprite;
+    });
+    //-------------------------------------------------------------------------------------------------------------------------------
+    level.planets.forEach(p => {
+      const tile = this.hexGrid.grid[p.col][p.row];
+
+      tile.blocked = true;
+      tile.planet = true;
+
+      const sprite = this.add.image(tile.x, tile.y, 'planet');
+      sprite.setDisplaySize(55, 55);
+      sprite.setDepth(1);
+
+      tile.planetSprite = sprite;
+    });
+    //----------------------------------------------------------------------------------------------------------------------------------
+    const playerTile = this.hexGrid.grid[level.playerStart.col][level.playerStart.row];
     this.player = new PlayerUnit(this, playerTile, 'playerShip');
-    this.createEnergyUI();
+    //------------------------------------------------------------------------------------------------------------------------------------
 
-    this.enemies = [];
-    this.enemies.push(new EnemyUnit(this, enemyTile, 'enemyShip'));
+    // enemies
+    this.enemies = level.enemies.map(e => {
+      const tile = this.hexGrid.grid[e.col][e.row];
+      return new EnemyUnit(this, tile, 'enemyShip');
+    });
+    //------------------------------------------------------------------------------------------------------------------------------------
+
+    this.createEnergyUI();
 
     this.enemies.forEach(enemy => {
       enemy.sprite.setInteractive();
@@ -128,7 +141,7 @@ export class Level extends Phaser.Scene {
         }
       });
     });
-
+    //----------------------------------------------------------------------------------------------------------------------------------------
     this.player.sprite.setInteractive();
 
     this.player.sprite.on('pointerdown', () => {
@@ -208,54 +221,52 @@ export class Level extends Phaser.Scene {
         this.player.takeDamage(reducedDamage);
       }
 
-      if (!enemy.isAlive) return this.levelComplete();
-      if (!this.player.isAlive) return this.gameOver();
-
+      if (this.checkGameState()) return;
       this.endPlayerTurn();
     });
   }
 
   handlePlanetChallenge() {
-  const question = this.mathSystem.generateQuestion();
+    const question = this.mathSystem.generateQuestion();
 
-  this.showCombatUI(question, (playerAnswer) => {
-    const result = this.mathSystem.checkAnswer(playerAnswer);
+    this.showCombatUI(question, (playerAnswer) => {
+      const result = this.mathSystem.checkAnswer(playerAnswer);
 
-    if (result.correct) {
-      this.playerPowerUp = 'Attack Boost';
+      if (result.correct) {
+        this.playerPowerUp = 'Attack Boost';
 
-      const powerText = this.add.text(640, 150, 'Power-Up Earned: Attack Boost!', {
-        fontSize: '28px',
-        color: '#00ff99',
-        backgroundColor: '#000000',
-        padding: { left: 10, right: 10, top: 5, bottom: 5 }
-      }).setOrigin(0.5).setDepth(150);
+        const powerText = this.add.text(640, 150, 'Power-Up Earned: Attack Boost!', {
+          fontSize: '28px',
+          color: '#00ff99',
+          backgroundColor: '#000000',
+          padding: { left: 10, right: 10, top: 5, bottom: 5 }
+        }).setOrigin(0.5).setDepth(150);
 
-      this.time.delayedCall(1500, () => {
-        powerText.destroy();
-      });
+        this.time.delayedCall(1500, () => {
+          powerText.destroy();
+        });
 
-      console.log('Player earned Attack Boost');
-    } else {
-      const wrongText = this.add.text(640, 150, 'Wrong answer! No power-up earned.', {
-        fontSize: '28px',
-        color: '#ff4444',
-        backgroundColor: '#000000',
-        padding: { left: 10, right: 10, top: 5, bottom: 5 }
-      }).setOrigin(0.5).setDepth(150);
+        console.log('Player earned Attack Boost');
+      } else {
+        const wrongText = this.add.text(640, 150, 'Wrong answer! No power-up earned.', {
+          fontSize: '28px',
+          color: '#ff4444',
+          backgroundColor: '#000000',
+          padding: { left: 10, right: 10, top: 5, bottom: 5 }
+        }).setOrigin(0.5).setDepth(150);
 
-      this.time.delayedCall(1500, () => {
-        wrongText.destroy();
-      });
-    }
+        this.time.delayedCall(1500, () => {
+          wrongText.destroy();
+        });
+      }
 
-    this.endPlayerTurn();
-  });
-}
+      this.endPlayerTurn();
+    });
+  }
 
   gameOver() {
     this.currentTurn = 'none';
-    this.input.enabled = false;
+    this.input.enabled = true;
 
     this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.75).setDepth(100);
 
@@ -364,7 +375,10 @@ export class Level extends Phaser.Scene {
       else if (event.key === 'Enter') {
         submit();
       }
-      else if (!isNaN(event.key)) {
+      else if (!isNaN(event.key) || event.key === '-') {
+        // only allow '-' at the start
+        if (event.key === '-' && answer.length > 0) return;
+
         answer += event.key;
       }
 
@@ -425,5 +439,44 @@ export class Level extends Phaser.Scene {
 
   updateEnergyDisplay() {
     this.energyText.setText(`Energy: ${this.player.energyPoints}`);
+  }
+
+  checkGameState() {
+    if (!this.player.isAlive) {
+      this.gameOver();
+      return true;
+    }
+
+    const aliveEnemies = this.enemies.some(e => e.isAlive);
+    if (!aliveEnemies) {
+      this.levelComplete();
+      return true;
+    }
+
+    return false;
+  }
+
+  endPlayerTurn() {
+    if (!this.player.isAlive) {
+      this.checkGameState();
+      return;
+    }
+
+    this.currentTurn = 'enemy';
+
+    this.time.delayedCall(300, () => {
+      this.enemies.forEach(enemy => {
+        if (enemy.isAlive) enemy.takeTurn();
+      });
+
+      // IMPORTANT: check AFTER enemy turn
+      this.time.delayedCall(50, () => {
+        this.checkGameState();
+
+        if (this.player.isAlive) {
+          this.currentTurn = 'player';
+        }
+      });
+    });
   }
 }
